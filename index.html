@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Flappy Food</title>
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.55.2/dist/phaser.min.js"></script>
+</head>
+<body>
+    <script>
+        const config = {
+            type: Phaser.AUTO,
+            width: 800,
+            height: 600,
+            physics: {
+                default: 'arcade',
+                arcade: {
+                    gravity: { y: 300 },
+                    debug: false
+                }
+            },
+            scene: {
+                preload: preload,
+                create: create,
+                update: update
+            }
+        };
+
+        const game = new Phaser.Game(config);
+
+        function preload() {
+            this.load.image('background', 'assets/background.png');
+            this.load.image('tube', 'assets/tube.png');
+            this.load.spritesheet('bird', 'assets/bird.png', { frameWidth: 34, frameHeight: 24 });
+        }
+
+        function create() {
+            this.add.image(400, 300, 'background');
+
+            this.bird = this.physics.add.sprite(100, 300, 'bird');
+            this.bird.setCollideWorldBounds(true);
+
+            this.input.keyboard.on('keydown-SPACE', () => {
+                if (!this.bird.body.touching.down) {
+                    this.bird.setVelocityY(-300);
+                }
+            });
+
+            this.tubes = this.physics.add.group({
+                defaultKey: 'tube',
+                defaultFrame: 0,
+                removeCallback: (tube) => {
+                    this.tubes.killAndHide(tube);
+                    this.tubes.remove(tube);
+                }
+            });
+
+            this.time.addEvent({
+                delay: 1500,
+                callback: () => {
+                    const tube = this.tubes.get(Phaser.Math.Between(200, 600), 0);
+                    tube.setActive(true);
+                    tube.setVisible(true);
+                    this.physics.moveTo(tube, Phaser.Math.Between(200, 600), 0, Phaser.Math.Between(100, 200));
+                },
+                loop: true
+            });
+        }
+
+        function update() {
+            if (this.bird.y > 600) {
+                this.scene.restart();
+            }
+
+            this.physics.overlap(this.bird, this.tubes, () => {
+                this.scene.restart();
+            });
+        }
+    </script>
+</body>
+</html>
